@@ -116,4 +116,4 @@ tools\MakeIcon.cs           génère l'icône
 
 ## Désinstaller
 
-Désactivez « Lancer au démarrage » dans les Réglages, arrêtez le fond (clic droit sur l'icône → *Arrêter le fond animé et quitter*), puis supprimez le répertoire de l'application, les raccourcis et `%APPDATA%\CL-Wallpaper`.
+**Réglages → Désinstaller…** : arrête le fond (Windows reprend son fond habituel), puis supprime l'app, ses réglages et vignettes, ses raccourcis, le lancement au démarrage et `%APPDATA%\CL-Wallpaper`. Vos vidéos et images sont conservées, sauf si vous cochez la case pour les envoyer à la corbeille.

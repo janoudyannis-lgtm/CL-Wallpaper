@@ -595,6 +595,7 @@ namespace CLWallpaper.Ui
             PromptInput.Visibility = input == null ? Visibility.Collapsed : Visibility.Visible;
             PromptInput.Text = input ?? "";
             PromptError.Visibility = Visibility.Collapsed;
+            PromptCheck.Visibility = Visibility.Collapsed;
             BtnPromptOk.Content = ok;
             BtnPromptOk.SetResourceReference(FrameworkElement.StyleProperty, danger ? "DangerBtn" : "PrimaryBtnSmall");
             promptHandler = onOk;

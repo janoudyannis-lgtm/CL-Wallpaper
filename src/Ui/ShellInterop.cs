@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -174,6 +174,23 @@ namespace CLWallpaper.Ui
             finally { Marshal.ReleaseComObject(sh); }
         }
 
+        /// <summary>Target of a .lnk file, or null.</summary>
+        public static string ShortcutTarget(string lnkPath)
+        {
+            if (!File.Exists(lnkPath)) return null;
+            Type t = Type.GetTypeFromProgID("WScript.Shell");
+            object sh = Activator.CreateInstance(t);
+            try
+            {
+                object lnk = t.InvokeMember("CreateShortcut", BindingFlags.InvokeMethod, null, sh, new object[] { lnkPath });
+                string target = lnk.GetType().InvokeMember("TargetPath", BindingFlags.GetProperty, null, lnk, null) as string;
+                Marshal.ReleaseComObject(lnk);
+                return target;
+            }
+            catch { return null; }
+            finally { Marshal.ReleaseComObject(sh); }
+        }
+
         public static void Recycle(string path)
         {
             if (Directory.Exists(path))
@@ -213,6 +230,16 @@ namespace CLWallpaper.Ui
             {
                 if (on) k.SetValue(Name, "\"" + Store.ExePath + "\" --host" + Store.DataArg);
                 else k.DeleteValue(Name, false);
+            }
+        }
+
+        /// <summary>Removes the startup entry only if it launches <paramref name="exe"/> (not another copy of the app).</summary>
+        public static void RemoveIfMine(string exe)
+        {
+            using (var k = Registry.CurrentUser.OpenSubKey(Key, true))
+            {
+                var v = k == null ? null : k.GetValue(Name) as string;
+                if (v != null && v.IndexOf(exe, StringComparison.OrdinalIgnoreCase) >= 0) k.DeleteValue(Name, false);
             }
         }
     }

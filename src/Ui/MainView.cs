@@ -67,7 +67,8 @@ namespace CLWallpaper.Ui
         ColumnDefinition InspCol;
         TextBox DayTime, NightTime, UpdateSource;
         TextBlock DayName, NightName, UpdateStatus;
-        Button BtnStore, BtnCheckUpdate, BtnUpdateFile;
+        Button BtnStore, BtnCheckUpdate, BtnUpdateFile, BtnUninstall;
+        CheckBox PromptCheck;
         CheckBox SwLoopFade, SwConvertGif, SwSchedule, SwUpdateCheck;
         Border LoopFadeBox;
         ScrollViewer SettingsScroll;

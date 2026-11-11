@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -35,6 +36,7 @@ namespace CLWallpaper.Ui
             UpdateSource.KeyDown += (s, e) => { if (e.Key == Key.Enter) { SaveUpdateSource(); e.Handled = true; } };
             BtnCheckUpdate.Click += delegate { SaveUpdateSource(); CheckForUpdate(true); };
             BtnUpdateFile.Click += delegate { UpdateFromFile(); };
+            BtnUninstall.Click += delegate { AskUninstall(); };
 
             Window.Loaded += delegate
             {
@@ -151,6 +153,76 @@ namespace CLWallpaper.Ui
             statusStamp = DateTime.MinValue;
             ShowToast((night ? "Fond de nuit" : "Fond de jour") + " · " + Describe(p, "") + " · à partir de " + Hhmm(night ? settings.NightStart : settings.DayStart)
                 + (wasOn ? "" : "\nProgrammation jour / nuit activée (Réglages)"), 4000);
+        }
+
+        // ------------------------------------------------------------------ uninstall
+
+        void AskUninstall()
+        {
+            Prompt("Désinstaller CL-Wallpaper ?",
+                "Le fond animé s'arrête et Windows reprend son fond habituel. L'app, ses réglages, ses vignettes, ses raccourcis et le lancement au démarrage sont supprimés.",
+                null, "Désinstaller", true, _ => { Uninstall(PromptCheck.IsChecked == true); return null; });
+            PromptCheck.Content = "Supprimer aussi mes vidéos et images (envoyées à la corbeille)";
+            PromptCheck.IsChecked = false;
+            PromptCheck.Visibility = Visibility.Visible;
+        }
+
+        void Uninstall(bool removeLibrary)
+        {
+            string exe = Store.ExePath, data = Store.DataDir, meta = Store.MetaDir, library = Store.LibraryDir;
+            var problems = new System.Collections.Generic.List<string>();
+            Action<string, Action> step = (what, a) => { try { a(); } catch (Exception ex) { problems.Add(what + " : " + ex.Message); Store.Log("uninstall " + what + ": " + ex); } };
+
+            FlushSave();
+            StopPreview();
+            statusTimer.Stop();
+            if (watcher != null) { watcher.Dispose(); watcher = null; }
+            step("fond d'écran", StopHostAndWait);
+            step("démarrage", () => Autostart.RemoveIfMine(exe));
+            // shortcuts that open *this* copy of the app
+            foreach (var dir in new[] { Environment.SpecialFolder.Programs, Environment.SpecialFolder.DesktopDirectory, Environment.SpecialFolder.StartMenu })
+            {
+                string lnk = Path.Combine(Environment.GetFolderPath(dir), Store.AppName + ".lnk");
+                step("raccourci", () =>
+                {
+                    string target = Shell.ShortcutTarget(lnk);
+                    if (target != null && string.Equals(Path.GetFullPath(target), exe, StringComparison.OrdinalIgnoreCase)) File.Delete(lnk);
+                });
+            }
+            // the pointer to the app directory, if it is ours
+            step("emplacement", () =>
+            {
+                string ptr = Store.PointerFile;
+                if (File.Exists(ptr) && string.Equals(File.ReadAllText(ptr).Trim().TrimEnd('\\'), data.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase)) File.Delete(ptr);
+                string pdir = Path.GetDirectoryName(ptr);
+                if (Directory.Exists(pdir) && !Directory.EnumerateFileSystemEntries(pdir).Any()) Directory.Delete(pdir);
+            });
+            step("réglages", () => { if (Directory.Exists(meta)) Directory.Delete(meta, true); });
+            if (removeLibrary) step("bibliothèque", () => Shell.Recycle(library));
+
+            // The exe cannot delete itself while it runs: a tiny script waits for it to exit, then removes it,
+            // then the app directory if nothing is left in it.
+            step("exe", () =>
+            {
+                string bat = Path.Combine(Path.GetTempPath(), "clwallpaper-uninstall-" + Process.GetCurrentProcess().Id + ".cmd");
+                string exeDir = Path.GetDirectoryName(exe);
+                string script = "@echo off\r\nchcp 65001 >nul\r\nset n=0\r\n:loop\r\n"
+                    + "del /f /q \"" + exe + "\" >nul 2>&1\r\n"
+                    + "if exist \"" + exe + "\" (\r\n  set /a n+=1\r\n  if %n% gtr 60 goto end\r\n  timeout /t 1 /nobreak >nul\r\n  goto loop\r\n)\r\n"
+                    + "del /f /q \"" + exe + ".old\" \"" + exe + ".*.old\" >nul 2>&1\r\n"
+                    + "rmdir \"" + data + "\" >nul 2>&1\r\n"
+                    + "rmdir \"" + exeDir + "\" >nul 2>&1\r\n"
+                    + ":end\r\ndel \"%~f0\"\r\n";
+                File.WriteAllText(bat, script, new System.Text.UTF8Encoding(false));
+                Process.Start(new ProcessStartInfo("cmd.exe", "/c \"" + bat + "\"") { CreateNoWindow = true, UseShellExecute = false, WindowStyle = ProcessWindowStyle.Hidden });
+            });
+
+            string msg = "CL-Wallpaper a été désinstallé.";
+            if (!removeLibrary && Directory.Exists(library)) msg += "\n\nVos vidéos et images sont conservées ici :\n" + library;
+            if (problems.Count > 0) msg += "\n\nCertains éléments n'ont pas pu être supprimés :\n• " + string.Join("\n• ", problems);
+            MessageBox.Show(Window, msg, Store.AppName, MessageBoxButton.OK, problems.Count > 0 ? MessageBoxImage.Warning : MessageBoxImage.Information);
+            UiApp.ReleaseInstance();
+            Application.Current.Shutdown();
         }
 
         // ------------------------------------------------------------------ updates

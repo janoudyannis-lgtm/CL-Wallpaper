@@ -370,6 +370,11 @@
               <Button x:Name="BtnUpdateFile" DockPanel.Dock="Right" Style="{DynamicResource PushBtn}" Content="Depuis un fichier…" Margin="10,0,0,0"/>
               <TextBlock x:Name="UpdateStatus" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="{DynamicResource Fg2}"/>
             </DockPanel>
+            <TextBlock Text="Désinstaller" Style="{DynamicResource InspHeader}"/>
+            <DockPanel>
+              <Button x:Name="BtnUninstall" DockPanel.Dock="Right" Style="{DynamicResource PushBtn}" Content="Désinstaller…" Margin="10,0,0,0"/>
+              <TextBlock Text="Retire l'app, ses réglages, ses raccourcis et le lancement au démarrage." VerticalAlignment="Center" TextWrapping="Wrap" Foreground="{DynamicResource Fg2}"/>
+            </DockPanel>
             </StackPanel>
             </ScrollViewer>
           </StackPanel>
@@ -379,6 +384,7 @@
             <TextBlock x:Name="PromptTitle" FontFamily="{DynamicResource DisplayFont}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
             <TextBlock x:Name="PromptMsg" TextWrapping="Wrap" Foreground="{DynamicResource Fg2}" Margin="0,6,0,0"/>
             <TextBox x:Name="PromptInput" Style="{DynamicResource Field}" Margin="0,14,0,0"/>
+            <CheckBox x:Name="PromptCheck" Style="{DynamicResource MacCheck}" Margin="0,16,0,0" Visibility="Collapsed"/>
             <TextBlock x:Name="PromptError" Foreground="{DynamicResource Danger}" Margin="0,8,0,0" Visibility="Collapsed" TextWrapping="Wrap"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,22,0,0">
               <Button x:Name="BtnPromptCancel" Style="{DynamicResource PushBtn}" Content="Annuler" MinWidth="92"/>
