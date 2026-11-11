@@ -93,7 +93,7 @@ L'updater n'installe une version que si son empreinte SHA-256 correspond et, si 
 
 Le numéro de version se change dans `src\Program.cs` (attributs `Assembly…Version`) et `src\Core\Store.cs` (`Store.Version`).
 
-Pour tester le mode « un fond par écran » sur un seul moniteur : lancer le fond avec la variable d'environnement `CLW_FAKE_SCREENS=2` (l'écran est coupé en deux).
+Pour tester le mode « un fond par écran » sur un seul moniteur : lancer le fond avec la variable d'environnement `CLW_FAKE_SCREENS=2` (l'écran est coupé en deux). Pour simuler un petit écran de portable : `CLW_FAKE_WORKAREA=1093x582` avant de lancer l'app.
 
 ## Code
 

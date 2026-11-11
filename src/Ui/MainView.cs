@@ -87,6 +87,7 @@ namespace CLWallpaper.Ui
 
             Window = (Window)Res.Xaml("MainWindow.xaml");
             BindNames();
+            FitToScreen();
             try
             {
                 Window.Icon = Res.Icon(32);
@@ -128,6 +129,25 @@ namespace CLWallpaper.Ui
                 if (this.configured) InitLibrary(); else ShowSetup();
             };
             StartShowListener();
+        }
+
+        /// <summary>
+        /// Small screens (laptops, 125–150 % scaling): never open larger than the usable area of the screen
+        /// (taskbar excluded), and lower the minimum size so the window can always fit.
+        /// </summary>
+        void FitToScreen()
+        {
+            Rect wa = SystemParameters.WorkArea; // in WPF units, primary screen, without the taskbar
+            var fake = (Environment.GetEnvironmentVariable("CLW_FAKE_WORKAREA") ?? "").Split('x'); // test hook, e.g. 1280x680
+            double fw, fh;
+            if (fake.Length == 2 && double.TryParse(fake[0], out fw) && double.TryParse(fake[1], out fh)) wa = new Rect(0, 0, fw, fh);
+            const double margin = 16;
+            double w = Math.Min(Window.Width, wa.Width - 2 * margin), h = Math.Min(Window.Height, wa.Height - 2 * margin);
+            Window.MinWidth = Math.Min(Window.MinWidth, Math.Max(640, wa.Width - 2 * margin));
+            Window.MinHeight = Math.Min(Window.MinHeight, Math.Max(420, wa.Height - 2 * margin));
+            Window.Width = Math.Max(Window.MinWidth, w);
+            Window.Height = Math.Max(Window.MinHeight, h);
+            if (Window.Width > wa.Width || Window.Height > wa.Height) Window.WindowState = WindowState.Maximized; // tiny screens
         }
 
         DispatcherTimer Timer(int ms, EventHandler tick)
