@@ -1,0 +1,6 @@
+*.exe
+*.old
+*.tmp
+*.part.mp4
+.vs/
+
