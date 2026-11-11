@@ -71,7 +71,7 @@ namespace CLWallpaper.Ui
         CheckBox PromptCheck;
         CheckBox SwLoopFade, SwConvertGif, SwSchedule, SwUpdateCheck;
         Border LoopFadeBox;
-        ScrollViewer SettingsScroll;
+        ScrollViewer SettingsScroll, InspScroll;
         Image SetupLogo;
 #pragma warning restore 649
 

@@ -222,7 +222,7 @@ namespace CLWallpaper
     public static class Store
     {
         public const string AppName = "CL-Wallpaper";
-        public const string Version = "1.2.2";
+        public const string Version = "1.2.3";
         public const string LibraryName = "Bibliothèque";
         public static readonly string[] VideoExt = { ".mp4", ".m4v", ".mov", ".mkv", ".webm", ".avi", ".wmv", ".mpg", ".mpeg", ".ts", ".m2ts", ".3gp" };
         public static readonly string[] ImageExt = { ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp", ".tif", ".tiff", ".jfif", ".heic", ".avif" };

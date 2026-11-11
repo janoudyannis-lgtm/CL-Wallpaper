@@ -293,7 +293,9 @@ namespace CLWallpaper.Ui
         void EnsurePreviewHost()
         {
             if (preview != null) return;
-            preview = new VideoHost();
+            preview = new VideoHost { ClipTo = InspScroll };
+            InspScroll.ScrollChanged += delegate { if (preview != null) preview.UpdateRegion(); };
+            InspScroll.SizeChanged += delegate { if (preview != null) preview.UpdateRegion(); };
             preview.Loaded += delegate
             {
                 if (PreviewPlayer != null)

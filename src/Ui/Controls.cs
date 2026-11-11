@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -182,15 +182,44 @@ namespace CLWallpaper.Ui
             if (Player != null) Player.ApplyFit();
         }
 
+        [System.Runtime.InteropServices.DllImport("gdi32.dll")] static extern IntPtr CreateRectRgn(int l, int t, int r, int b);
+        [System.Runtime.InteropServices.DllImport("gdi32.dll")] static extern int CombineRgn(IntPtr dst, IntPtr a, IntPtr b, int mode);
+
+        /// <summary>
+        /// The scrolling container the preview lives in. A native window is not clipped by WPF, so without this
+        /// the video would be drawn over the title bar and toolbar when the inspector is scrolled.
+        /// </summary>
+        public FrameworkElement ClipTo;
+
         public void UpdateRegion()
         {
             if (hwnd == IntPtr.Zero) return;
             RECT rc; Native.GetClientRect(hwnd, out rc);
-            if (Radius <= 0) { Native.SetWindowRgn(hwnd, IntPtr.Zero, true); return; }
             var ps = PresentationSource.FromVisual(this);
             double dpi = ps != null && ps.CompositionTarget != null ? ps.CompositionTarget.TransformToDevice.M11 : 1;
-            int r = (int)Math.Round(Radius * 2 * dpi);
-            IntPtr rgn = Native.CreateRoundRectRgn(0, 0, rc.Right + 1, rc.Bottom + 1, r, r);
+
+            // visible part of the preview, in its own device pixels
+            Rect vis = new Rect(0, 0, rc.Right, rc.Bottom);
+            if (ClipTo != null && ps != null && ClipTo.ActualWidth > 0 && ClipTo.ActualHeight > 0)
+            {
+                try
+                {
+                    Rect box = ClipTo.TransformToDescendant(this).TransformBounds(new Rect(0, 0, ClipTo.ActualWidth, ClipTo.ActualHeight));
+                    vis.Intersect(new Rect(box.X * dpi, box.Y * dpi, box.Width * dpi, box.Height * dpi));
+                }
+                catch (InvalidOperationException) { } // not in the same tree yet
+            }
+            IntPtr rgn;
+            if (vis.IsEmpty || vis.Width < 1 || vis.Height < 1) rgn = CreateRectRgn(0, 0, 0, 0); // scrolled out of view
+            else
+            {
+                rgn = Radius > 0
+                    ? Native.CreateRoundRectRgn(0, 0, rc.Right + 1, rc.Bottom + 1, (int)Math.Round(Radius * 2 * dpi), (int)Math.Round(Radius * 2 * dpi))
+                    : CreateRectRgn(0, 0, rc.Right, rc.Bottom);
+                IntPtr cut = CreateRectRgn((int)Math.Floor(vis.Left), (int)Math.Floor(vis.Top), (int)Math.Ceiling(vis.Right), (int)Math.Ceiling(vis.Bottom));
+                CombineRgn(rgn, rgn, cut, 1 /* RGN_AND */);
+                Native.DeleteObject(cut);
+            }
             Native.SetWindowRgn(hwnd, rgn, true); // the window owns the region afterwards
         }
 
