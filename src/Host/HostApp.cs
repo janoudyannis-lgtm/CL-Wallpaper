@@ -489,6 +489,7 @@ namespace CLWallpaper.Host
         void OnWinEvent(IntPtr hook, uint ev, IntPtr hwnd, int idObject, int idChild, uint thread, uint time)
         {
             if (idObject != 0 || hwnd == IntPtr.Zero) return; // window-level events only
+            if (ev == 0x8002 && DesktopHost.IsWorkerW(hwnd)) { FixDesktopOrder(); return; } // new wallpaper layer (virtual desktop switch)
             if (ev == 0x800B) { pauseDirty = true; return; }   // very frequent: handled on the next tick
             if (ev == 0x0017 || ev == 0x0003) UpdatePause();   // restored / switched app: react immediately
             pauseDirty = true;                                 // and again once animations are done
@@ -497,6 +498,7 @@ namespace CLWallpaper.Host
         void OnTick(object sender, EventArgs e)
         {
             tickCount++;
+            FixDesktopOrder(); // fallback in case the show event was missed
             foreach (var w in wins)
                 if (w.Video != null)
                 {
@@ -520,6 +522,17 @@ namespace CLWallpaper.Host
                 c.ImageElapsed += 0.25;
                 if (c.ImageElapsed >= Math.Max(2, c.Folder.ImageSec)) Next(c);
             }
+        }
+
+        readonly HashSet<IntPtr> myHandles = new HashSet<IntPtr>();
+
+        void FixDesktopOrder()
+        {
+            if (wins.Count == 0) return;
+            myHandles.Clear();
+            foreach (var w in wins) myHandles.Add(w.Handle);
+            if (DesktopHost.FixOrder(myHandles))
+                foreach (var w in wins) if (w.Video != null) w.Video.Repaint();
         }
 
         void UpdatePause()

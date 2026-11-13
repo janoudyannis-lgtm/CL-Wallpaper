@@ -6,9 +6,9 @@ using System.Runtime.Versioning;
 [assembly: AssemblyTitle("CL-Wallpaper")]
 [assembly: AssemblyProduct("CL-Wallpaper")]
 [assembly: AssemblyDescription("Fonds d'écran animés pour Windows")]
-[assembly: AssemblyVersion("1.2.3.0")]
-[assembly: AssemblyFileVersion("1.2.3.0")]
-[assembly: AssemblyInformationalVersion("1.2.3")]
+[assembly: AssemblyVersion("1.2.4.0")]
+[assembly: AssemblyFileVersion("1.2.4.0")]
+[assembly: AssemblyInformationalVersion("1.2.4")]
 [assembly: AssemblyCompany("CL-Wallpaper")]
 
 namespace CLWallpaper
